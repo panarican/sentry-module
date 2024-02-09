@@ -20,3 +20,7 @@ export function callOnce (fn: (...args: any[]) => any): (...args: any[]) => any 
     }
   }
 }
+
+export function isBot (userAgent: string): boolean {
+  return /googlebot|bingbot/i.test(userAgent)
+}
