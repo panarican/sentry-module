@@ -5,7 +5,7 @@ import type { SentryWebpackPluginOptions } from '@sentry/webpack-plugin'
 import { captureException, withScope } from '@sentry/node'
 import type { Configuration as WebpackConfig } from 'webpack'
 import { defineNuxtModule, isNuxt2, useLogger } from './kit-shim'
-import { envToBool, boolToText, callOnce, canInitialize, clientSentryEnabled, serverSentryEnabled, isBot } from './utils'
+import { envToBool, boolToText, callOnce, canInitialize, clientSentryEnabled, serverSentryEnabled } from './utils'
 import { buildHook, initializeServerSentry, shutdownServerSentry, webpackConfigHook } from './hooks'
 import type { SentryHandlerProxy } from './options'
 import type { ModuleConfiguration, ModuleOptions, ModulePublicRuntimeConfig } from './types'
@@ -108,44 +108,24 @@ export default defineNuxtModule<ModuleConfiguration>({
         tracingHandler: (_, __, next) => { next() },
       }
       // @ts-expect-error Nuxt 2 only hook
-      nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => { 
-        if (isBot(req.headers['user-agent'].userAgent)) {
-          return;
-        } 
-        sentryHandlerProxy.requestHandler(req, res, next) 
-      }))
+      nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => { sentryHandlerProxy.requestHandler(req, res, next) }))
       if (options.tracing) {
         // @ts-expect-error Nuxt 2 only hook
-        nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => {
-          if (isBot(req.headers['user-agent'].userAgent)) {
-            return;
-          } 
-          sentryHandlerProxy.tracingHandler(req, res, next) 
-        }))
+        nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => { sentryHandlerProxy.tracingHandler(req, res, next) }))
       }
       // @ts-expect-error Nuxt 2 only hook
-      nuxt.hook('render:errorMiddleware', app => app.use((error, req, res, next) => {
-          if (isBot(req.headers['user-agent'].userAgent)) {
-            return;
-          } 
-          sentryHandlerProxy.errorHandler(error, req, res, next) 
-        }))
+      nuxt.hook('render:errorMiddleware', app => app.use((error, req, res, next) => { sentryHandlerProxy.errorHandler(error, req, res, next) }))
       // @ts-expect-error Nuxt 2 only hook
       nuxt.hook('generate:routeFailed', ({ route, errors }) => {
-
-        try {
-          type routeGeneretorError = {
-            type: 'handled' | 'unhandled'
-            route: unknown
-            error: Error
-          }
-          (errors as routeGeneretorError[]).forEach(({ error }) => withScope((scope) => {
-            scope.setExtra('route', route)
-            captureException(error)
-          }))
-        } catch(err) {
-          // There may be times sentry is disabled because of a bot just ignore any errors if any
+        type routeGeneretorError = {
+          type: 'handled' | 'unhandled'
+          route: unknown
+          error: Error
         }
+        (errors as routeGeneretorError[]).forEach(({ error }) => withScope((scope) => {
+          scope.setExtra('route', route)
+          captureException(error)
+        }))
       })
       // This is messy but Nuxt provides many modes that it can be started with like:
       // - nuxt dev

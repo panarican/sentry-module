@@ -3,14 +3,8 @@ import { getActiveSpan, getDynamicSamplingContextFromSpan, spanToTraceHeader } f
 import { dynamicSamplingContextToSentryBaggageHeader } from '~@sentry/utils'
 <% } %>
 
-const isBot = /googlebot|bingbot/i;
-
 /** @type {import('@nuxt/types').Plugin} */
 export default function (ctx, inject) {
-  if (isBot.test(ctx.req.headers['user-agent'].userAgent)) {
-    return;
-  }
-  
   const sentry = process.sentry || null
   if (!sentry) {
     return
