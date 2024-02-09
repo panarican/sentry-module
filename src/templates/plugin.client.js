@@ -1,9 +1,11 @@
 import Vue from 'vue';
 import { getConfig, init, SentrySdk } from './sentry.client.shared';
 
+const isBot = /googlebot|bingbot/i;
+
 /** @type {import('@nuxt/types').Plugin} */
 export default async function (ctx, inject) {
-  if (/googlebot|bingbot/i.test(navigator.userAgent)) {
+  if (isBot.test(navigator.userAgent)) {
     return;
   }
 
