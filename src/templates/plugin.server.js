@@ -2,7 +2,7 @@
 import { getActiveSpan, getDynamicSamplingContextFromSpan, spanToTraceHeader } from '~@sentry/core'
 import { dynamicSamplingContextToSentryBaggageHeader } from '~@sentry/utils'
 <% } %>
-import { isBot } from '../utils';
+import { isBot } from './utils.js';
 
 /** @type {import('@nuxt/types').Plugin} */
 export default function (ctx, inject) {
