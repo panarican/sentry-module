@@ -16,6 +16,8 @@ const logger = useLogger('nuxt:sentry')
 
 const moduleDir = fileURLToPath(new URL('./', import.meta.url))
 
+const isBot = /Googlebot|Bingbot|AdsBot-Google|Google-Safety|APIs-Google|Mediapartners-Google/i
+
 export default defineNuxtModule<ModuleConfiguration>({
   meta: {
     name: '@nuxtjs/sentry',
@@ -108,13 +110,28 @@ export default defineNuxtModule<ModuleConfiguration>({
         tracingHandler: (_, __, next) => { next() },
       }
       // @ts-expect-error Nuxt 2 only hook
-      nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => { sentryHandlerProxy.requestHandler(req, res, next) }))
+      nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => {
+        if (isBot.test(req.headers['user-agent'])) {
+          return next()
+        }
+        sentryHandlerProxy.requestHandler(req, res, next)
+      }))
       if (options.tracing) {
         // @ts-expect-error Nuxt 2 only hook
-        nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => { sentryHandlerProxy.tracingHandler(req, res, next) }))
+        nuxt.hook('render:setupMiddleware', app => app.use((req, res, next) => {
+          if (isBot.test(req.headers['user-agent'])) {
+            return next()
+          }
+          sentryHandlerProxy.tracingHandler(req, res, next)
+        }))
       }
       // @ts-expect-error Nuxt 2 only hook
-      nuxt.hook('render:errorMiddleware', app => app.use((error, req, res, next) => { sentryHandlerProxy.errorHandler(error, req, res, next) }))
+      nuxt.hook('render:errorMiddleware', app => app.use((error, req, res, next) => {
+        if (isBot.test(req.headers['user-agent'])) {
+          return next()
+        }
+        sentryHandlerProxy.errorHandler(error, req, res, next)
+      }))
       // @ts-expect-error Nuxt 2 only hook
       nuxt.hook('generate:routeFailed', ({ route, errors }) => {
         type routeGeneretorError = {

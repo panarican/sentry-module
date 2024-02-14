@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import { getConfig, init, SentrySdk } from './sentry.client.shared';
 
-const isBot = /googlebot|bingbot/i;
+const isBot =
+  /Googlebot|Bingbot|AdsBot-Google|Google-Safety|APIs-Google|Mediapartners-Google/i;
 
 /** @type {import('@nuxt/types').Plugin} */
 export default async function (ctx, inject) {
